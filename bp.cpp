@@ -53,8 +53,11 @@ public:
         return history_entry_array[tag];
     }
 
-    void updateHistory() {
-
+    void updateHistory(uint32_t tag, bool taken) {
+        history_entry_array[tag] << 1;
+        if(taken) {
+            history_entry_array[tag] += 1;
+        }
     }
 
     void resetHistory(const uint32_t tag) {
@@ -122,8 +125,8 @@ public:
         prediction_entries[history_key].updateFsm(taken);
     }
 
-    void resetFsm(uint8_t history_key) {
-
+    void resetFsm(uint8_t history_key, STATE initial_state) {
+        prediction_entries[history_key].resetFsm(initial_state);
     }
 
 };
@@ -153,12 +156,22 @@ public:
         }
     }
 
-    void updateFsm() {
-
+    void updateFsm(uint32_t tag_index, uint8_t history_key, bool taken) {
+        if(is_table_global) {
+            return prediction_table[0].updateFsm(history_key, taken);
+        }
+        else {
+            return prediction_table[tag_index].updateFsm(history_key, taken);
+        }
     }
 
-    void resetFsm() {
-
+    void resetFsm(uint32_t tag_index, uint8_t history_key, STATE initial_state) {
+        if(is_table_global) {
+            return prediction_table[0].resetFsm(history_key, initial_state);
+        }
+        else {
+            return prediction_table[tag_index].resetFsm(history_key, initial_state);
+        }
     }
 };
 
@@ -186,7 +199,7 @@ class BTBTable {
     unsigned btb_size;
     unsigned history_size;
     unsigned tag_size;
-    unsigned fsm_initial_state;
+    STATE fsm_initial_state;
 
     bool is_history_global;
     bool is_fsm_global;
@@ -204,21 +217,34 @@ class BTBTable {
         return size;
     }
 
+    bool _btb_entry_exists(const uint8_t btb_index) const{
+        return (btb_entries_array[btb_index].tag_identifier != -1);
+    }
+
+    void _insert_btb_entry(Indices &indices, uint32_t targetPc) {
+        btb_entries_array[indices.btb_index].tag_identifier = indices.tag_index;
+        btb_entries_array[indices.btb_index].tag_identifier = indices.tag_index;
+        history_table.resetHistory(indices.tag_index);
+        prediction_matrix.resetFsm(indices.tag_index, history_table.getHistory(indices.tag_index), fsm_initial_state);
+    }
+
     void _update_entrance_info(const Indices &indices, const uint32_t target) {
         // Update tag and target in adequate entrance
         btb_entries_array[indices.btb_index].tag_identifier = indices.tag_index;
         btb_entries_array[indices.btb_index].target = target;
     }
 
-    void _reset_predictor(const Indices &indices, uint32_t new_tag, uint32_t new_target) {
+    void _reset_btb_entry_upon_tag_collision(const Indices &indices, const uint32_t new_target) {
         // Update BTBEntry with new tag and target (?)
         /**************************************************************/
         /////////// TODO: Find out how to update the target if needed.
         /**************************************************************/
         uint32_t old_tag = btb_entries_array[indices.btb_index].tag_identifier;
+        uint8_t old_history_key = is_fsm_global ? old_tag ^ history_table.getHistory(old_tag) : history_table.getHistory(old_tag);
 
         _update_entrance_info(indices, new_target);
         history_table.resetHistory(old_tag);
+        prediction_matrix.resetFsm(indices.tag_index, history_table.getHistory(indices.tag_index), fsm_initial_state);
 
     }
 
@@ -263,7 +289,7 @@ public:
               bool isGlobalHist,
               bool isGlobalTable,
               int Shared ) :
-              btb_size(btbSize), history_size(historySize), tag_size(tagSize), fsm_initial_state(fsmState),
+              btb_size(btbSize), history_size(historySize), tag_size(tagSize), fsm_initial_state(static_cast<STATE>(fsmState)),
               is_history_global(isGlobalHist), is_fsm_global(isGlobalTable),
               share_mode(static_cast<SHARE_MODE>(Shared)), btb_entries_array(new BTBEntry[btbSize]),
               history_table(isGlobalHist, historySize),
@@ -296,11 +322,12 @@ public:
                 // The currently handled branch has the same btb index and same tag.
                 // No need to reset, just get index to the fsm and return the prediction and target.
                 *target = btb_entries_array[indices->btb_index].target;
-                return prediction_matrix.predict(...);
+                uint8_t history_key = is_fsm_global ? indices->shared_index : history_table.getHistory(indices->tag_index);
+                return prediction_matrix.predict(indices->tag_index,history_key);
 
             } else {
                 // The currently handled branch has the same btb index but DIFFERENT tag. Reset entry.
-                _reset_predictor(...);
+                _reset_btb_entry_upon_tag_collision(*indices,...);
             }
         }
 
@@ -310,12 +337,27 @@ public:
 
     void updateBtb(uint32_t pc, uint32_t targetPc, bool taken, uint32_t pred_dst) {
         statistics->br_num++;
-        if(predict(pc, &pred_dst) == taken) {
-            return;
+        auto *indices = new Indices();
+        _decode_indices(pc, *indices);
+
+        // Check if entry exists
+        if(_btb_entry_exists(indices->btb_index)){
+
+            // Entry exists. Update statistics
+            if((!taken && (pred_dst != pc+4)) || (taken && (pred_dst == pc+4)) || (taken && (pred_dst != targetPc))) {
+                statistics->flush_num++;
+            }
+
+            // Update BTB
+            _update_entrance_info(*indices,targetPc);
+            uint8_t history_key = is_fsm_global ? indices->shared_index : history_table.getHistory(indices->tag_index);
+            history_table.updateHistory(indices->tag_index, taken);
+            prediction_matrix.updateFsm(indices->tag_index, history_key, taken);
         } else {
-            statistics->flush_num++;
+            _insert_btb_entry(*indices, targetPc);
         }
-        _update_entrance_info()
+
+        delete indices;
     }
 
     void getStat(SIM_stats &update_stat) {
@@ -329,15 +371,7 @@ public:
 
 /*************************************************************************/
 /*                          TODO
- * 1. Implement PredictionMatrix class
- *    2.1 updateFsm
- *    2.2 resetFsm
- * 2. Implement PredctionTable class (per branch)
- *    3.1 updateFsm
- *    3.2 resetFsm
- * 3. Implement HistoryTable method updateHistory
- * 4. Implement BTBTable update method
- * 5. Implement BTBTable reset method
+ * Check how to resolve target on tag collision in BTBTable.predict()
  */
 /*************************************************************************/
 
