@@ -66,16 +66,100 @@ public:
 /*                     PREDICTION TABLE HANDLER                          */
 /*************************************************************************/
 
-class PredictionEntry {
+class PredictionFsmPerHistory {
+    STATE current_state;
+public:
+    PredictionFsmPerHistory() = default;
+    ~PredictionFsmPerHistory() = default;
 
+    bool predict() {
+        if(current_state == SNT || current_state == WNT) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    void resetFsm(const STATE new_state) {
+        current_state = new_state;
+    }
+
+    void updateFsm(bool taken) {
+        int state_number = static_cast<int>(current_state);
+        if(taken) {
+            state_number++;
+        } else {
+            state_number--;
+        }
+        current_state = static_cast<STATE>(state_number);
+    }
 };
 
-class PredictionTable {
+class PredictionTablePerBranch {
+    PredictionFsmPerHistory *prediction_entries;
+public:
+
+    void _create_entries_array(unsigned history_size, STATE initial_state) {
+        prediction_entries = new PredictionFsmPerHistory[history_size];
+
+        // Cannot initialize arrays in cpp.
+        for(int i = 0; i < history_size ; i++) {
+            prediction_entries[i].resetFsm(initial_state);
+        }
+    }
+    void _destroy_entries() {
+        delete[] prediction_entries;
+    }
+
+    PredictionTablePerBranch() = default;
+    ~PredictionTablePerBranch() = default;
+
+    bool predict(uint8_t history_key) {
+        return prediction_entries[history_key].predict();
+    }
+
+    void updateFsm(uint8_t history_key, bool taken) {
+        prediction_entries[history_key].updateFsm(taken);
+    }
+
+    void resetFsm(uint8_t history_key) {
+
+    }
 
 };
 
 class PredictionMatrix {
+    bool is_table_global;
+    PredictionTablePerBranch *prediction_table;
 
+public:
+    PredictionMatrix(uint8_t btb_size, unsigned history_size, STATE initial_state) {
+        prediction_table = new PredictionTablePerBranch[btb_size];
+        prediction_table->_create_entries_array(history_size, initial_state);
+    };
+
+    ~PredictionMatrix() {
+        prediction_table->_destroy_entries();
+        delete[] prediction_table;
+    }
+
+
+    bool predict(uint32_t tag_index, uint8_t history_key) {
+        if(is_table_global) {
+            return prediction_table[0].predict(history_key);
+        }
+        else {
+            return prediction_table[tag_index].predict(history_key);
+        }
+    }
+
+    void updateFsm() {
+
+    }
+
+    void resetFsm() {
+
+    }
 };
 
 /*************************************************************************/
@@ -182,7 +266,8 @@ public:
               btb_size(btbSize), history_size(historySize), tag_size(tagSize), fsm_initial_state(fsmState),
               is_history_global(isGlobalHist), is_fsm_global(isGlobalTable),
               share_mode(static_cast<SHARE_MODE>(Shared)), btb_entries_array(new BTBEntry[btbSize]),
-              history_table(isGlobalHist, historySize) {
+              history_table(isGlobalHist, historySize),
+              prediction_matrix(btbSize, historySize, static_cast<STATE>(fsmState)) {
 
         statistics->br_num = 0;
         statistics->flush_num = 0;
@@ -230,6 +315,7 @@ public:
         } else {
             statistics->flush_num++;
         }
+        _update_entrance_info()
     }
 
     void getStat(SIM_stats &update_stat) {
@@ -243,17 +329,15 @@ public:
 
 /*************************************************************************/
 /*                          TODO
- * 1. Implement calc_total_size to calculate total size of btb
- * 2. Implement PredictionMatrix class
- *    2.1 predict
- *    2.2 updateFsm
- *    2.3 resetFsm
- * 3. Implement PredctionTable class (per branch)
- *    3.1 predict
- *    3.2 updateFsm
- *    3.3 resetFsm
- * 4. Implement PredictionEntry class (per history)
- *    == Check if needed ==
+ * 1. Implement PredictionMatrix class
+ *    2.1 updateFsm
+ *    2.2 resetFsm
+ * 2. Implement PredctionTable class (per branch)
+ *    3.1 updateFsm
+ *    3.2 resetFsm
+ * 3. Implement HistoryTable method updateHistory
+ * 4. Implement BTBTable update method
+ * 5. Implement BTBTable reset method
  */
 /*************************************************************************/
 
