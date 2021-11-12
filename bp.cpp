@@ -115,7 +115,10 @@ class BTBTable {
 
     /*********************************    BTB TABLE HELPER FUNCTIONS    *********************************/
 
-    void
+    unsigned _calc_total_size() {
+        unsigned size = btb_size * (tag_size + 1 + (OPCODE_BITS_IDX + 1) + history_size + (2 * pow(2,history_size)));
+        return size;
+    }
 
     void _update_entrance_info(const Indices &indices, const uint32_t target) {
         // Update tag and target in adequate entrance
@@ -192,7 +195,8 @@ public:
         delete[] btb_entries_array;
     }
 
-    bool predict(uint32_t branch_pc, uint32_t *target) {
+
+    bool predict(const uint32_t branch_pc, uint32_t *target) {
 
         // Extract all necessary indices.
         auto *indices = new Indices();

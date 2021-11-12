@@ -56,10 +56,10 @@ RM = "C:\Program Files\JetBrains\CLion 2021.2\bin\cmake\win\bin\cmake.exe" -E rm
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = C:\Users\elino\CLionProjects\untitled2
+CMAKE_SOURCE_DIR = C:\Users\elino\CLionProjects\CAhw1
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = C:\Users\elino\CLionProjects\untitled2\cmake-build-debug
+CMAKE_BINARY_DIR = C:\Users\elino\CLionProjects\CAhw1\cmake-build-debug
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -86,9 +86,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\elino\CLionProjects\untitled2\cmake-build-debug\CMakeFiles C:\Users\elino\CLionProjects\untitled2\cmake-build-debug\\CMakeFiles\progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\elino\CLionProjects\CAhw1\cmake-build-debug\CMakeFiles C:\Users\elino\CLionProjects\CAhw1\cmake-build-debug\\CMakeFiles\progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\elino\CLionProjects\untitled2\cmake-build-debug\CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start C:\Users\elino\CLionProjects\CAhw1\cmake-build-debug\CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -116,24 +116,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named untitled2
+# Target rules for targets named CAhw1
 
 # Build rule for target.
-untitled2: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 untitled2
-.PHONY : untitled2
+CAhw1: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 CAhw1
+.PHONY : CAhw1
 
 # fast build rule for target.
-untitled2/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\untitled2.dir\build.make CMakeFiles/untitled2.dir/build
-.PHONY : untitled2/fast
+CAhw1/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\CAhw1.dir\build.make CMakeFiles/CAhw1.dir/build
+.PHONY : CAhw1/fast
 
 bp.obj: bp.cpp.obj
 .PHONY : bp.obj
 
 # target to build an object file
 bp.cpp.obj:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\untitled2.dir\build.make CMakeFiles/untitled2.dir/bp.cpp.obj
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\CAhw1.dir\build.make CMakeFiles/CAhw1.dir/bp.cpp.obj
 .PHONY : bp.cpp.obj
 
 bp.i: bp.cpp.i
@@ -141,7 +141,7 @@ bp.i: bp.cpp.i
 
 # target to preprocess a source file
 bp.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\untitled2.dir\build.make CMakeFiles/untitled2.dir/bp.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\CAhw1.dir\build.make CMakeFiles/CAhw1.dir/bp.cpp.i
 .PHONY : bp.cpp.i
 
 bp.s: bp.cpp.s
@@ -149,7 +149,7 @@ bp.s: bp.cpp.s
 
 # target to generate assembly for a file
 bp.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles\untitled2.dir\build.make CMakeFiles/untitled2.dir/bp.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\CAhw1.dir\build.make CMakeFiles/CAhw1.dir/bp.cpp.s
 .PHONY : bp.cpp.s
 
 # Help Target
@@ -160,7 +160,7 @@ help:
 	@echo ... depend
 	@echo ... edit_cache
 	@echo ... rebuild_cache
-	@echo ... untitled2
+	@echo ... CAhw1
 	@echo ... bp.obj
 	@echo ... bp.i
 	@echo ... bp.s

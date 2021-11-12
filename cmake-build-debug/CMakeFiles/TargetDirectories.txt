@@ -1,3 +1,3 @@
-C:/Users/elino/CLionProjects/untitled2/cmake-build-debug/CMakeFiles/untitled2.dir
-C:/Users/elino/CLionProjects/untitled2/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/elino/CLionProjects/untitled2/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+C:/Users/elino/CLionProjects/CAhw1/cmake-build-debug/CMakeFiles/CAhw1.dir
+C:/Users/elino/CLionProjects/CAhw1/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/elino/CLionProjects/CAhw1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
